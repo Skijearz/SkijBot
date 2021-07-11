@@ -9,8 +9,8 @@ import loadconfig
 from getRecentCrashes import getRecentCrashes
 
 
-__version__ = '0.1.1'
-description = '''Skijearzs Bot namens Pablo'''
+__version__ = '0.1.2'
+description = '''Pablo... er ist Schiffbrüchig '''
 
 
 log = logging.getLogger("SkijBot")
