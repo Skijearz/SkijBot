@@ -1,15 +1,14 @@
 import logging
-from discord.ext.commands.core import is_nsfw, is_owner
+from discord.ext.commands.core import is_owner
 import pkg_resources
 import os
 import discord
 from discord import activity
 from discord.ext import commands
 import loadconfig
-from getRecentCrashes import getRecentCrashes
 
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 description = '''Pablo... er ist Schiffbrüchig '''
 
 
@@ -48,7 +47,8 @@ class SkijBot(commands.AutoShardedBot):
         self.load_extension("cogs.Info")
         self.load_extension("cogs.Crash")
         self.load_extension("cogs.Admin")
-        self.load_extension("cogs.AutoReminder")
+        self.load_extension("cogs.AutoReminderYt")
+        self.load_extension("cogs.AutoReminderTwitch")
 
 
         
