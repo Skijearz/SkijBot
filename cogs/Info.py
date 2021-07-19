@@ -21,7 +21,7 @@ class Info(commands.Cog):
         embed.add_field(name="#Member: ", value=amountOfMembersInGuild,inline=True)
         embed.add_field(name="Bot-Version", value=self.bot.botVersion,inline=True)
         embed.add_field(name="Discord.py-Version",value=discord.__version__,inline=True)
-        embed.set_footer(text="Wir sind Schiffbrüchig..")
+        embed.set_footer(text="Experiment 6-2-6")
         await ctx.send(embed = embed)
 
 def setup(bot):

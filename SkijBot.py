@@ -6,20 +6,24 @@ import discord
 from discord import activity
 from discord.ext import commands
 import loadconfig
+import aiohttp
+import twitchAnnouncementLib
 
 
-__version__ = '0.1.3'
-description = '''Pablo... er ist Schiffbrüchig '''
+__version__ = '0.1.4'
+description = '''Tooki ba waba! '''
 
 
-log = logging.getLogger("SkijBot")
-logging.basicConfig(level=os.environ.get('LOGLEVEL','INFO'))
+log = logging.getLogger("discord")
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',level=os.environ.get('LOGLEVEL','INFO'),datefmt='%Y-%m-%d %H:%M:%S')
 
-class SkijBot(commands.AutoShardedBot):
+class SkijBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         intents.members = True
         super().__init__(command_prefix=loadconfig.__prefix__,description=description,intents=intents)
+
+        self.session = aiohttp.ClientSession()
 
 
     async def on_message(self,message):
@@ -40,7 +44,7 @@ class SkijBot(commands.AutoShardedBot):
         log.info(f'Owner: {self.AppInfo.owner}')
         log.info(f'Discord.Py Version: {pkg_resources.get_distribution("discord.py").version}')
         log.info('=============')
-        game = discord.Game("Wir sind Schiffbrüchig!")
+        game = discord.Game("Ohanna heißt Familie")
         await self.change_presence(status=discord.Status.online,activity=game)
         self.botVersion = __version__
 
@@ -50,10 +54,13 @@ class SkijBot(commands.AutoShardedBot):
         self.load_extension("cogs.AutoReminderYt")
         self.load_extension("cogs.AutoReminderTwitch")
 
-
-        
-
-
+        if not twitchAnnouncementLib.isTokenValid():
+            await twitchAnnouncementLib.createAuthToken(self.session)
+    
+    async def close(self):
+        await super().close()
+        await self.session.close()
+    
 
 if __name__ == '__main__':
     bot = SkijBot()

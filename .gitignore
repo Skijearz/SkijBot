@@ -145,4 +145,7 @@ cython_debug/
 #YTData
 YTData/
 
+#TwitchData
+TwitchData/
+
 # End of https://www.toptal.com/developers/gitignore/api/python
