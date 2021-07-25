@@ -23,4 +23,8 @@ if os.path.isfile(configFile):
         from config.config import __twitchAPIChannelID__
     except:
         raise Exception('__twitchAPIChannelID__ must be set ')
+    try: 
+        from config.config import __ytApiKey__
+    except:
+        raise Exception('__ytApiKey__ must be set ')
         

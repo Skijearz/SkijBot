@@ -3,11 +3,11 @@ from discord.ext.commands.core import is_owner
 import pkg_resources
 import os
 import discord
-from discord import activity
 from discord.ext import commands
 import loadconfig
 import aiohttp
 import twitchAnnouncementLib
+import sys
 
 
 __version__ = '0.1.4'
@@ -15,14 +15,18 @@ description = '''Tooki ba waba! '''
 
 
 log = logging.getLogger("discord")
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',level=os.environ.get('LOGLEVEL','INFO'),datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(filename="log/log.txt",filemode='a',format='%(asctime)s %(levelname)-8s %(message)s',level=os.environ.get('LOGLEVEL','INFO'),datefmt='%Y-%m-%d %H:%M:%S')
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+handler.setFormatter(formatter)
+log.addHandler(handler)
 
 class SkijBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         intents.members = True
         super().__init__(command_prefix=loadconfig.__prefix__,description=description,intents=intents)
-
         self.session = aiohttp.ClientSession()
 
 

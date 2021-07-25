@@ -12,7 +12,7 @@ class Crash(commands.Cog):
     @commands.command(aliases=['ct','rc'])
     async def recentCrashes(self,ctx,recentCrashesAmount = None):
         if recentCrashesAmount is not None:
-            recentCrashesList = getRecentCrashes(recentCrashesAmount)
+            recentCrashesList = await getRecentCrashes(recentCrashesAmount,self.bot.session)
             embed = discord.Embed(title=f':chart_with_upwards_trend: WTFSkins: die {recentCrashesAmount} letzten Crashpoints',type='rich',color=0x845EC2)
             valueString = ''
             for x in recentCrashesList:

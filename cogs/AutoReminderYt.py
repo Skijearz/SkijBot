@@ -1,4 +1,5 @@
-import asyncio
+
+from inspect import trace
 import discord
 from discord.ext import commands, tasks
 import logging
@@ -7,6 +8,7 @@ import json
 import ytAnnouncementLib
 import loadconfig
 import time
+import traceback
 
 log = logging.getLogger("discord")
 logging.basicConfig(level=os.environ.get('LOGLEVEL','INFO'))
@@ -39,9 +41,12 @@ class AutoReminderYt(commands.Cog):
 
     @commands.command()
     async def subYt(self,ctx,channel : discord.TextChannel, youtubeChannel:str,*role : str):
-
-
-        channelName = ytAnnouncementLib.getChannelName(youtubeChannel)
+        testForValidLink = youtubeChannel.split("/")
+        if  not 'channel' in testForValidLink:
+            await ctx.send(f'Youtube-Channel Link muss in dem Format: https://www.youtube.com/channel/xxxx sein')
+            return
+        channelID = testForValidLink[-1]
+        channelName = await ytAnnouncementLib.getChannelName(channelID,self.bot.session)
         roles = "".join(role[:])
         if os.path.exists(YTDataJsonString.format(ctx.guild.id,channelName)):
             await ctx.send(f'**{channelName}** Bereits Aboniert')
@@ -50,15 +55,16 @@ class AutoReminderYt(commands.Cog):
                 os.makedirs("YTData/" + str(ctx.guild.id))
 
             with open(YTDataJsonString.format(ctx.guild.id,channelName),'w') as file:
-                tempDict = {"channelStr" : youtubeChannel,"DiscordChannel" : channel.id,"DiscordRoleToMention" : roles}
+                tempDict = {"channelStr" : youtubeChannel,"DiscordChannel" : channel.id,"DiscordRoleToMention" : roles,"playlistID" : 0}
                 tempJson = json.dumps(tempDict, indent=4)
                 file.write(tempJson)
                 file.close()
+            await ytAnnouncementLib.fillYTPlayListID(channelID,ctx.guild.id,channelName,self.bot.session)
             await ctx.send(f'**{channelName}** Abonniert')
     
     @commands.command()
     async def unSubYt(self,ctx,youtubeChannel:str):
-        channelName = ytAnnouncementLib.getChannelName(youtubeChannel)
+        channelName = await ytAnnouncementLib.getChannelName(youtubeChannel.split("/")[-1],self.bot.session)
         if os.path.isfile(YTDataJsonString.format(ctx.guild.id,channelName)):
             os.remove(YTDataJsonString.format(ctx.guild.id,channelName))
             await ctx.send(f'**{channelName}** Deabonniert')
@@ -78,25 +84,30 @@ class AutoReminderYt(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def checkForNewVideoAndPostLoop(self):
-        start_time = time.time()
-        guilds = os.listdir("YTData/")
-        for g in guilds:
-            channel = os.listdir("YTData/"+g + "/")
-            for c in channel:
-                channelName = c.split(".")[0]
-                guildID = g
-                log.info(f'Checking Youtube-Channel: {channelName}')
-                channelUrl = ytAnnouncementLib.getChannelUrlStrFromJson(channelName,guildID)
-                announcementURL = await ytAnnouncementLib.newestVideo(channelUrl,guildID,self.bot.session)
-                if announcementURL is not None:
-                    discordChannelid = ytAnnouncementLib.getDiscordChannelIDFromName(channelName,guildID)
-                    role = ytAnnouncementLib.getDiscordRoleFromName(channelName,guildID)
-                    channel = self.bot.get_channel(discordChannelid)
-                    if channel is not None:
-                        await channel.send(f'{role} Neues video von **{channelName}**:\n' + announcementURL)
-                    else:
-                        log.info("Channel nicht gefunden")
-        log.info("Checking all YouTube-Channel took : --- %s seconds ---" % (time.time() - start_time))   
+        try:
+            start_time = time.time()
+            guilds = os.listdir("YTData/")
+            for g in guilds:
+                channel = os.listdir("YTData/"+g + "/")
+                for c in channel:
+                    channelName = c.split(".")[0]
+                    guildID = g
+                    log.info(f'Checking Youtube-Channel: {channelName}')
+                    playListID = await ytAnnouncementLib.getPlayListIDFromJson(channelName,guildID)
+                    announcementURL = await ytAnnouncementLib.newestVideo(channelName,guildID,playListID,self.bot.session)
+                    if announcementURL is not None:
+                        discordChannelid = ytAnnouncementLib.getDiscordChannelIDFromName(channelName,guildID)
+                        role = ytAnnouncementLib.getDiscordRoleFromName(channelName,guildID)
+                        channel = self.bot.get_channel(discordChannelid)
+                        if channel is not None:
+                            await channel.send(f'{role} Neues video von **{channelName}**:\n' + announcementURL)
+                        else:
+                            log.info("Channel nicht gefunden")
+        except:
+            log.info(traceback.print_exc())
+
+        log.info("Checking all YouTube-Channel took : --- %s seconds ---" % (time.time() - start_time))  
+
 
 def setup(bot):
     bot.add_cog(AutoReminderYt(bot))

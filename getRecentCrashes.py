@@ -1,6 +1,4 @@
-import requests
-import json
-
+import aiohttp
 
 url = "https://www.wtfskins.com/api/v1/crashroundhistory/?limit={}&offset=0"
 headers = {
@@ -10,9 +8,9 @@ headers = {
 
 
 
-def getRecentCrashes(amountOfRecentCrashPoints):
-    page = requests.get(url.format(amountOfRecentCrashPoints),headers=headers)
-    pageJson = json.loads(page.content)
+async def getRecentCrashes(amountOfRecentCrashPoints, session : aiohttp.ClientSession):
+    async with session.get(url.format(amountOfRecentCrashPoints),headers=headers) as r:
+        pageJson = await r.json()
 
     recentCrashPoints = []
     for x in pageJson['response']['data']:
