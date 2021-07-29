@@ -9,9 +9,8 @@ import twitchAnnouncementLib
 import logging
 import time
 import traceback
+import random as r
 
-#TODO: THREADDING Einbauen um zeit der requests zu verrinngern, https://pawelmhm.github.io/asyncio/python/aiohttp/2016/04/22/asyncio-aiohttp.html sieht nach einem viel versprechendem ansatz aus
-#TODO: maybe: for g in guilds dann worker starten (für jede guild einen worker starten) und diesen dann für jeden sub einen worker starten lassen - klingt in der theorie machbar :D
 
 log = logging.getLogger("discord")
 logging.basicConfig(level=os.environ.get('LOGLEVEL','INFO'))
@@ -32,10 +31,10 @@ class AutoReminderTwitch(commands.Cog):
 
     async def cog_check(self,ctx):
         member = ctx.author
-        role = discord.utils.get(ctx.guild.roles, name=self.REQUIRED_ROLE)
-        if role in member.roles:
+        if member.guild_permissions.administrator:
             return True
         else:
+            await ctx.send(":no_entry: Du benötigst Administrator rechte für diesen Befehl!")
             return False
 
     @commands.command()
@@ -64,32 +63,38 @@ class AutoReminderTwitch(commands.Cog):
         else:
             await ctx.send(f'**{twitchChannelName}** ist nicht Abonniert')
             
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=120)
     async def checkForLiveChannelAndNotify(self):
         try:
             start_time = time.time()
             guilds = os.listdir("TwitchData/")
             for g in guilds:
-                channel = os.listdir("TwitchData/"+g+"/")   
+                channel = os.listdir("TwitchData/"+g+"/") 
+                tasks = []  
                 for c in channel:
                     channelName = c.split(".")[0]
                     guildID = g
-                    log.info(f'Checking Twitch-Channel: {channelName}')
-                    twitchResponse = await twitchAnnouncementLib.checkForLiveChannel(channelName,guildID,self.bot.session)
-                    if twitchResponse is not None:
-                        channelID = twitchAnnouncementLib.getDiscordChannelFromName(guildID,channelName)
-                        roles = twitchAnnouncementLib.getDiscordRoleFromName(guildID,channelName)
-                        channel = self.bot.get_channel(channelID)
-                        embed = discord.Embed(title=twitchResponse['title'],url=f"https://twitch.tv/{channelName}",type='rich',color=0x845EC2)
-                        embed.set_author(name=twitchResponse["user_name"])
-                        embed.set_thumbnail(url = twitchResponse['profile_image_url'])
-                        embed.add_field(name="Game", value=twitchResponse['game_name'], inline=True)
-                        embed.add_field(name="Viewers", value=twitchResponse['viewer_count'], inline = True)
-                        embed.set_image(url=twitchResponse['thumbnail_url'].format(width = 320, height = 180))
-                        await channel.send(f'{roles} {twitchResponse["user_name"]} ist nun Live!!', embed=embed)
+                    task = asyncio.ensure_future(self.asyncWorkerLiveChannelCheck(guildID,channelName))
+                    tasks.append(task)
+                await asyncio.gather(*tasks,return_exceptions=True)
         except:
             log.info(traceback.print_exc())
-        log.info("Checking all Twitch-Channel took : --- %s seconds ---" % (time.time() - start_time))                    
+        log.info("Checking all Twitch-Channel took : --- %s seconds ---" % (time.time() - start_time))      
+
+    async def asyncWorkerLiveChannelCheck(self,guildID,channelName):
+        twitchResponse = await twitchAnnouncementLib.checkForLiveChannel(channelName,guildID,self.bot.session)
+        if twitchResponse is not None:
+            channelID = twitchAnnouncementLib.getDiscordChannelFromName(guildID,channelName)
+            roles = twitchAnnouncementLib.getDiscordRoleFromName(guildID,channelName)
+            channel = self.bot.get_channel(channelID)
+            embed = discord.Embed(title=twitchResponse['title'],url=f"https://twitch.tv/{channelName}",type='rich',color=0x845EC2)
+            embed.set_author(name=twitchResponse["user_name"])
+            embed.set_thumbnail(url = twitchResponse['profile_image_url'])
+            embed.add_field(name="Game", value=twitchResponse['game_name'], inline=True)
+            embed.add_field(name="Viewers", value=twitchResponse['viewer_count'], inline = True)
+            embed.set_image(url=twitchResponse['thumbnail_url'].format(width = 320, height = 180)+str(r.randint(1000,9999)))
+            await channel.send(f'{roles} {twitchResponse["user_name"]} ist nun Live!!', embed=embed)
+
 
 def setup(bot):
     bot.add_cog(AutoReminderTwitch(bot))

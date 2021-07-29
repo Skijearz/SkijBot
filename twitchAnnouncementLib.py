@@ -34,10 +34,10 @@ async def checkForLiveChannel(TwitchChannel : str, guildID : str, session: aioht
     async with session.get(API_URL_PROFILE_IMAGE.format(TwitchChannel), headers={'Client-ID': APICHANNELID, 'Authorization' : 'Bearer ' + APIAUTHTOKEN}) as r:
         twitchResponseImageJson = await r.json()
 
-    if isJsonPopulated(twitchResponseJsonData):
+    if await isJsonPopulated(twitchResponseJsonData):
         lastStreamed = twitchResponseJsonData['data'][0]['started_at']
-        if getLastStreamed(guildID,TwitchChannel) != lastStreamed:
-            setLastStreamed(guildID,TwitchChannel,lastStreamed)
+        if await getLastStreamed(guildID,TwitchChannel) != lastStreamed:
+            await setLastStreamed(guildID,TwitchChannel,lastStreamed)
             return {'user_name' : twitchResponseJsonData['data'][0]['user_name'],'game_name' : twitchResponseJsonData['data'][0]['game_name'],'title' : twitchResponseJsonData['data'][0]['title'],'viewer_count':twitchResponseJsonData['data'][0]['viewer_count'],'thumbnail_url' : twitchResponseJsonData['data'][0]['thumbnail_url'],'profile_image_url' : twitchResponseImageJson['data'][0]['profile_image_url']}
         else:
             return None
@@ -61,7 +61,7 @@ async def createAuthToken(session : aiohttp.ClientSession):
         fileRead.truncate()
         fileRead.close()
 
-def isTokenValid():
+async def isTokenValid():
     if not os.path.isfile(TwitchConfigFile):
         return False
 
@@ -70,19 +70,19 @@ def isTokenValid():
         fileRead.close()
         return not data['EXPIRES'] <= time.time()
          
-def getDiscordChannelFromName(guildID : str,channelName : str):
+async def getDiscordChannelFromName(guildID : str,channelName : str):
     with open(TwitchDataJsonString.format(guildID,channelName)) as fileRead:
         data = json.load(fileRead)
         fileRead.close()
         return data['DiscordChannel']
 
-def getDiscordRoleFromName(guildID: str,channelName :str):
+async def getDiscordRoleFromName(guildID: str,channelName :str):
     with open(TwitchDataJsonString.format(guildID,channelName)) as fileRead:
         data = json.load(fileRead)
         fileRead.close()
         return data['DiscordRoleToMention']
 
-def setLastStreamed(guildID,channelName,value : str):
+async def setLastStreamed(guildID,channelName,value : str):
         newDict = {"LastStreamed" : value}
         with open(TwitchDataJsonString.format(guildID,channelName),'r+') as fileRead:
             data = json.load(fileRead)
@@ -92,13 +92,13 @@ def setLastStreamed(guildID,channelName,value : str):
             fileRead.truncate()
             fileRead.close()
 
-def getLastStreamed(guildID,channelName):
+async def getLastStreamed(guildID,channelName):
     with open(TwitchDataJsonString.format(guildID,channelName),'r') as fileRead:
             data = json.load(fileRead)
             fileRead.close()
             return data['LastStreamed']
 
-def isJsonPopulated(json):
+async def isJsonPopulated(json):
     return 'data' in json and len(json['data']) != 0
 
 if __name__ == "__main__":

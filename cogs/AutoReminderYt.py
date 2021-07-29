@@ -9,6 +9,7 @@ import ytAnnouncementLib
 import loadconfig
 import time
 import traceback
+import asyncio
 
 log = logging.getLogger("discord")
 logging.basicConfig(level=os.environ.get('LOGLEVEL','INFO'))
@@ -33,10 +34,10 @@ class AutoReminderYt(commands.Cog):
 
     async def cog_check(self,ctx):
         member = ctx.author
-        role = discord.utils.get(ctx.guild.roles, name=self.REQUIRED_ROLE)
-        if role in member.roles:
+        if member.guild_permissions.administrator:
             return True
         else:
+            await ctx.send(":no_entry: Du benötigst Administrator rechte für diesen Befehl!")
             return False
 
     @commands.command()
@@ -89,24 +90,30 @@ class AutoReminderYt(commands.Cog):
             guilds = os.listdir("YTData/")
             for g in guilds:
                 channel = os.listdir("YTData/"+g + "/")
+                tasks = []
                 for c in channel:
                     channelName = c.split(".")[0]
                     guildID = g
-                    log.info(f'Checking Youtube-Channel: {channelName}')
-                    playListID = await ytAnnouncementLib.getPlayListIDFromJson(channelName,guildID)
-                    announcementURL = await ytAnnouncementLib.newestVideo(channelName,guildID,playListID,self.bot.session)
-                    if announcementURL is not None:
-                        discordChannelid = ytAnnouncementLib.getDiscordChannelIDFromName(channelName,guildID)
-                        role = ytAnnouncementLib.getDiscordRoleFromName(channelName,guildID)
-                        channel = self.bot.get_channel(discordChannelid)
-                        if channel is not None:
-                            await channel.send(f'{role} Neues video von **{channelName}**:\n' + announcementURL)
-                        else:
-                            log.info("Channel nicht gefunden")
+                    task = asyncio.ensure_future(self.asyncWorkerNewVideo(guildID,channelName))
+                    tasks.append(task)
+                await asyncio.gather(*tasks,return_exceptions=True)
         except:
             log.info(traceback.print_exc())
 
-        log.info("Checking all YouTube-Channel took : --- %s seconds ---" % (time.time() - start_time))  
+        log.info("Checking all YouTube-Channel took : --- %s seconds ---" % (time.time() - start_time)) 
+
+    async def  asyncWorkerNewVideo(self,guildID,channelName):
+        playListID = await ytAnnouncementLib.getPlayListIDFromJson(channelName,guildID)
+        announcementURL = await ytAnnouncementLib.newestVideo(channelName,guildID,playListID,self.bot.session)
+        if announcementURL is not None:
+            discordChannelid = ytAnnouncementLib.getDiscordChannelIDFromName(channelName,guildID)
+            role = ytAnnouncementLib.getDiscordRoleFromName(channelName,guildID)
+            channel = self.bot.get_channel(discordChannelid)
+            if channel is not None:
+                await channel.send(f'{role} Neues video von **{channelName}**:\n' + announcementURL)
+            else:
+                log.info("Channel nicht gefunden")
+
 
 
 def setup(bot):
