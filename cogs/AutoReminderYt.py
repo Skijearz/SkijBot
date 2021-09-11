@@ -100,7 +100,8 @@ class AutoReminderYt(commands.Cog):
         except:
             log.info(traceback.print_exc())
 
-        log.info("Checking all YouTube-Channel took : --- %s seconds ---" % (time.time() - start_time)) 
+        log.info("Checking all YouTube-Channel took : --- %s seconds ---" % (time.time() - start_time))
+        self.bot.ytCheckerPing = time.time() - start_time    
 
     async def  asyncWorkerNewVideo(self,guildID,channelName):
         playListID = await ytAnnouncementLib.getPlayListIDFromJson(channelName,guildID)

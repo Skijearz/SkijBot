@@ -150,4 +150,7 @@ TwitchData/
 
 log/
 
+config/config.py
+config/twitchAPIConfig.json
+
 # End of https://www.toptal.com/developers/gitignore/api/python

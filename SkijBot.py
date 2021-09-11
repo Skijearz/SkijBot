@@ -51,6 +51,8 @@ class SkijBot(commands.Bot):
         game = discord.Game("Ohanna heißt Familie")
         await self.change_presence(status=discord.Status.online,activity=game)
         self.botVersion = __version__
+        self.twCheckerPing = 0
+        self.ytCheckerPing = 0
 
         self.load_extension("cogs.Info")
         self.load_extension("cogs.Crash")

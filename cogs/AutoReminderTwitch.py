@@ -79,13 +79,14 @@ class AutoReminderTwitch(commands.Cog):
                 await asyncio.gather(*tasks,return_exceptions=True)
         except:
             log.info(traceback.print_exc())
-        log.info("Checking all Twitch-Channel took : --- %s seconds ---" % (time.time() - start_time))      
+        log.info("Checking all Twitch-Channel took : --- %s seconds ---" % (time.time() - start_time))
+        self.bot.twCheckerPing = time.time() - start_time      
 
     async def asyncWorkerLiveChannelCheck(self,guildID,channelName):
         twitchResponse = await twitchAnnouncementLib.checkForLiveChannel(channelName,guildID,self.bot.session)
         if twitchResponse is not None:
-            channelID = twitchAnnouncementLib.getDiscordChannelFromName(guildID,channelName)
-            roles = twitchAnnouncementLib.getDiscordRoleFromName(guildID,channelName)
+            channelID = await twitchAnnouncementLib.getDiscordChannelFromName(guildID,channelName)
+            roles = await twitchAnnouncementLib.getDiscordRoleFromName(guildID,channelName)
             channel = self.bot.get_channel(channelID)
             embed = discord.Embed(title=twitchResponse['title'],url=f"https://twitch.tv/{channelName}",type='rich',color=0x845EC2)
             embed.set_author(name=twitchResponse["user_name"])

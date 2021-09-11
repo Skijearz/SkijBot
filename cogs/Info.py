@@ -21,6 +21,8 @@ class Info(commands.Cog):
         embed.add_field(name="#Member: ", value=amountOfMembersInGuild,inline=True)
         embed.add_field(name="Bot-Version", value=self.bot.botVersion,inline=True)
         embed.add_field(name="Discord.py-Version",value=discord.__version__,inline=True)
+        embed.add_field(name="Letzter YT-Checker Ping", value= '%.2f' %self.bot.ytCheckerPing + " Sekunden", inline = True)
+        embed.add_field(name="Letzter Twitch-Checker Ping", value= '%.2f' %self.bot.twCheckerPing + " Sekunden", inline = True)  
         embed.set_footer(text="Experiment 6-2-6")
         await ctx.send(embed = embed)
 
