@@ -60,7 +60,7 @@ class SkijBot(commands.Bot):
         self.load_extension("cogs.AutoReminderYt")
         self.load_extension("cogs.AutoReminderTwitch")
 
-        if not twitchAnnouncementLib.isTokenValid():
+        if not await twitchAnnouncementLib.isTokenValid():
             await twitchAnnouncementLib.createAuthToken(self.session)
     
     async def close(self):
