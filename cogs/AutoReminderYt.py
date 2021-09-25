@@ -63,7 +63,7 @@ class AutoReminderYt(commands.Cog):
             await ytAnnouncementLib.fillYTPlayListID(channelID,ctx.guild.id,channelName,self.bot.session)
             await ctx.send(f'**{channelName}** Abonniert')
     
-    @commands.command()
+    @commands.command() 
     async def unSubYt(self,ctx,youtubeChannel:str):
         channelName = await ytAnnouncementLib.getChannelName(youtubeChannel.split("/")[-1],self.bot.session)
         if os.path.isfile(YTDataJsonString.format(ctx.guild.id,channelName)):
@@ -107,8 +107,8 @@ class AutoReminderYt(commands.Cog):
         playListID = await ytAnnouncementLib.getPlayListIDFromJson(channelName,guildID)
         announcementURL = await ytAnnouncementLib.newestVideo(channelName,guildID,playListID,self.bot.session)
         if announcementURL is not None:
-            discordChannelid = ytAnnouncementLib.getDiscordChannelIDFromName(channelName,guildID)
-            role = ytAnnouncementLib.getDiscordRoleFromName(channelName,guildID)
+            discordChannelid = await ytAnnouncementLib.getDiscordChannelIDFromName(channelName,guildID)
+            role = await ytAnnouncementLib.getDiscordRoleFromName(channelName,guildID)
             channel = self.bot.get_channel(discordChannelid)
             if channel is not None:
                 await channel.send(f'{role} Neues video von **{channelName}**:\n' + announcementURL)

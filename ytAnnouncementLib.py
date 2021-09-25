@@ -19,7 +19,7 @@ async def newestVideo(channel: str, guildID: str,playListID, session: aiohttp.Cl
         jsonData = await r.json()
     channelName = channel
     newestUrl = "https://youtube.com/watch?v=" + jsonData['items'][0]['contentDetails']['videoId']
-    if isVideoNew(newestUrl,channelName, guildID ):
+    if await isVideoNew(newestUrl,channelName, guildID ):
         await storeNewUrl(newestUrl,channelName, guildID)
         return newestUrl
     else:
@@ -56,7 +56,7 @@ async def storeNewUrl(newVideoUrl : str,channelName : str , guildID : str):
         fileRead.close()
 
 
-def isVideoNew(newestVideoUrl : str,channelName : str, guildID : str):
+async def isVideoNew(newestVideoUrl : str,channelName : str, guildID : str):
     with open(YTDataJsonString.format(guildID,channelName),'r+') as fileRead:
         data = json.load(fileRead)
         fileRead.close()
@@ -76,13 +76,13 @@ async def getChannelName(channelID : str, session : aiohttp.ClientSession):
         json = await r.json()
         return json['items'][0]['snippet']['title']
 
-def getDiscordChannelIDFromName(channelName :str, guildID : str):
+async def getDiscordChannelIDFromName(channelName :str, guildID : str):
     with open(YTDataJsonString.format(guildID,channelName),'r') as fileRead:
         data = json.load(fileRead)
         fileRead.close()
         return data['DiscordChannel']
 
-def getDiscordRoleFromName(channelName :str, guildID :str):
+async def getDiscordRoleFromName(channelName :str, guildID :str):
     with open(YTDataJsonString.format(guildID,channelName),'r') as fileRead:
         data = json.load(fileRead)
         fileRead.close()
